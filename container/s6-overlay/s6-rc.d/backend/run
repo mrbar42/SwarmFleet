@@ -1,0 +1,31 @@
+#!/command/with-contenv sh
+exec 2>&1
+export HOME=/home/user
+export SWARMFLEET_TOOLS_ROOT="${SWARMFLEET_TOOLS_ROOT:-/home/user/.swarmfleet/tools}"
+export EDITOR="${EDITOR:-nano}"
+export VISUAL="${VISUAL:-nano}"
+export PATH="/command:/usr/local/sbin:/usr/local/bin:$SWARMFLEET_TOOLS_ROOT/bin:$SWARMFLEET_TOOLS_ROOT/npm/bin:$SWARMFLEET_TOOLS_ROOT/python/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+unset MISE_DATA_DIR MISE_CONFIG_DIR
+export SWARMFLEET_WORKSPACE="${SWARMFLEET_WORKSPACE:-/workspace}"
+export WORKSPACES_ROOT="${WORKSPACES_ROOT:-$SWARMFLEET_WORKSPACE}"
+export PORT="${PORT:-7080}"
+
+DEV_DIR="${SWARMFLEET_BACKEND_DIR:-/opt/swarmfleet/harness/backend}"
+if [ ! -d "$DEV_DIR" ]; then
+  echo "[backend] Backend dev dir not found: $DEV_DIR"
+  exec sleep infinity
+fi
+
+cd "$DEV_DIR"
+mkdir -p "$DEV_DIR/node_modules"
+if ! s6-setuidgid user test -w "$DEV_DIR/node_modules"; then
+  chown -R user:user "$DEV_DIR/node_modules"
+fi
+
+if [ ! -f "$DEV_DIR/node_modules/.package-lock.json" ] || \
+   ! diff -q "$DEV_DIR/package-lock.json" "$DEV_DIR/node_modules/.package-lock.json" >/dev/null 2>&1; then
+  echo "[backend] Installing backend deps (Linux-native)..."
+  s6-setuidgid user npm install 2>&1
+fi
+
+exec s6-setuidgid user npm run dev -- --host 0.0.0.0 --workspaces-root "$WORKSPACES_ROOT"

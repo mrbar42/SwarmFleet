@@ -1,0 +1,29 @@
+# Version control
+.git
+.gitignore
+
+# Host dependencies (container installs its own)
+node_modules
+harness/frontend/node_modules
+harness/backend/node_modules
+
+# Build artifacts
+.buildx-cache
+.buildx-cache.next
+harness/frontend/dist
+harness/backend/dist
+*.tsbuildinfo
+
+# Runtime data
+data/
+workspace/
+test-projects/
+.swarmfleet/
+.env
+.env.*
+
+# Development
+.claude/
+.vscode/
+local/
+*.log

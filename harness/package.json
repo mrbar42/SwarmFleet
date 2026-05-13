@@ -1,0 +1,16 @@
+{
+  "name": "swarmfleet",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n fe,be -c cyan,green \"cd frontend && npm run dev -- --port 7070\" \"WORKSPACES_ROOT=${WORKSPACES_ROOT:-/workspace} cd backend && npm run dev\"",
+    "setup": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../e2e && npm install",
+    "e2e:install": "cd e2e && npm install && npx playwright install chromium",
+    "test:e2e": "cd e2e && npm run test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Starting SwarmFleet</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(440px, calc(100vw - 48px));
+      text-align: center;
+    }
+    .spinner {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 999px;
+      border: 1px solid #30363d;
+      display: grid;
+      place-items: center;
+      background: #161b22;
+    }
+    .spinner::before {
+      content: "";
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 2px solid #30363d;
+      border-top-color: #58a6ff;
+      animation: spin 0.9s linear infinite;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0;
+      color: #8b949e;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .status {
+      margin-top: 18px;
+      color: #484f58;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      word-break: break-word;
+    }
+    button {
+      margin-top: 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #1f6feb;
+      color: white;
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #388bfd; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="spinner" aria-hidden="true"></div>
+    <h1>Starting SwarmFleet</h1>
+    <p>The app is coming online. This page will keep checking the backend and open SwarmFleet automatically when it is ready.</p>
+    <div class="status" id="status">Checking backend…</div>
+    <button type="button" id="checkNow">Check now</button>
+  </main>
+  <script>
+    const statusEl = document.getElementById("status");
+    const button = document.getElementById("checkNow");
+    const started = Date.now();
+    let attempt = 0;
+    let timer = null;
+
+    function elapsedSeconds() {
+      return Math.max(1, Math.round((Date.now() - started) / 1000));
+    }
+
+    async function checkBackend() {
+      attempt += 1;
+      clearTimeout(timer);
+      statusEl.textContent = `Checking backend… attempt ${attempt}, ${elapsedSeconds()}s`;
+      try {
+        const response = await fetch(`/auth/status?startup_check=${Date.now()}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        const contentType = response.headers.get("content-type") || "";
+        if (response.ok && contentType.includes("application/json")) {
+          const body = await response.json();
+          if (body && typeof body.authenticated === "boolean" && typeof body.hasCredentials === "boolean") {
+            statusEl.textContent = "Backend ready. Opening SwarmFleet…";
+            window.location.reload();
+            return;
+          }
+        }
+        statusEl.textContent = contentType.includes("text/html")
+          ? "Backend not ready yet. Checking again…"
+          : `Backend returned ${response.status}. Checking again…`;
+      } catch (error) {
+        statusEl.textContent = "Backend not reachable yet. Checking again…";
+      }
+      timer = setTimeout(checkBackend, Math.min(5000, 1000 + attempt * 500));
+    }
+
+    button.addEventListener("click", checkBackend);
+    checkBackend();
+  </script>
+</body>
+</html>

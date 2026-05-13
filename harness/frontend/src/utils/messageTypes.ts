@@ -1,0 +1,38 @@
+import type { SDKMessage, ThinkingContentItem } from "../types";
+
+export function isSystemMessage(
+  data: SDKMessage,
+): data is Extract<SDKMessage, { type: "system" }> {
+  return data.type === "system";
+}
+
+export function isAssistantMessage(
+  data: SDKMessage,
+): data is Extract<SDKMessage, { type: "assistant" }> {
+  return data.type === "assistant";
+}
+
+export function isResultMessage(
+  data: SDKMessage,
+): data is Extract<SDKMessage, { type: "result" }> {
+  return data.type === "result";
+}
+
+export function isUserMessage(
+  data: SDKMessage,
+): data is Extract<SDKMessage, { type: "user" }> {
+  return data.type === "user";
+}
+
+export function isThinkingContentItem(
+  item: unknown,
+): item is ThinkingContentItem {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    "type" in item &&
+    (item as { type: string }).type === "thinking" &&
+    "thinking" in item &&
+    typeof (item as { thinking: unknown }).thinking === "string"
+  );
+}

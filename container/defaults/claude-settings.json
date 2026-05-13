@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  },
+  "env": {
+    "DISABLE_AUTOUPDATER": "1"
+  },
+  "theme": "dark",
+  "model": "sonnet",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/notify.py stop"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/notify.py error"
+          }
+        ]
+      }
+    ]
+  }
+}

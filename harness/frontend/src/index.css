@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+@variant dark (.dark &);
+
+/* ── Design tokens (GitHub dark palette) ─────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-canvas: #0d1117;
+  --bg-primary: #161b22;
+  --bg-secondary: #21262d;
+  --bg-tertiary: #1c2129;
+  --bg-hover: #1c2129;
+  --bg-active: #1f2937;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Borders */
+  --border-default: #30363d;
+  --border-muted: #21262d;
+
+  /* Text */
+  --text-primary: #e6edf3;
+  --text-secondary: #c9d1d9;
+  --text-tertiary: #8b949e;
+  --text-disabled: #484f58;
+
+  /* Accent */
+  --accent-blue: #58a6ff;
+  --accent-blue-emphasis: #1f6feb;
+  --accent-blue-bright: #388bfd;
+  --accent-green: #3fb950;
+  --accent-green-emphasis: #238636;
+  --accent-green-muted: #2ea043;
+  --accent-red: #f85149;
+  --accent-red-emphasis: #da3633;
+  --accent-yellow: #d29922;
+  --accent-orange: #f0883e;
+  --accent-purple: #a371f7;
+  --accent-purple-muted: #d2a8ff;
+  --accent-pink: #f778ba;
+
+  /* Semantic */
+  --success-bg: #0f2d1a;
+  --success-border: #1e3a2d;
+  --danger-bg: #3d1214;
+  --danger-border: #5d1a1d;
+  --warning-bg: #2d2200;
+  --info-bg: #0c2d48;
+
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Sizing */
+  --header-height: 44px;
+  --bottomnav-height: 56px;
+  --sidebar-width: 256px;
+
+  /* Animation */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* ── Base resets ──────────────────────────────────────────────────── */
+html {
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: none;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling for Webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-disabled);
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(88, 166, 255, 0.3);
+  color: var(--text-primary);
+}
+
+/* ── Animations ──────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes typing-dots {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* Utility classes */
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) ease-out;
+}
+.animate-fade-in-up {
+  animation: fade-in-up var(--duration-slow) ease-out;
+}
+.animate-slide-in-left {
+  animation: slide-in-left var(--duration-slow) ease-out;
+}
+.animate-scale-in {
+  animation: scale-in var(--duration-normal) ease-out;
+}
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-primary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-primary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Typing indicator dots */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: typing-dots 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Compacting context divider animation */
+@keyframes compact-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.compact-pulse {
+  animation: compact-pulse 1.4s ease-in-out infinite;
+}
+@keyframes compact-ellipsis {
+  0%   { content: ""; }
+  25%  { content: "."; }
+  50%  { content: ".."; }
+  75%, 100% { content: "..."; }
+}
+.compact-ellipsis::after {
+  content: "";
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: compact-ellipsis 1.2s steps(4, end) infinite;
+}
+
+.chat-markdown ol {
+  list-style-position: outside;
+}
+
+.chat-markdown {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.chat-message-scroll,
+.chat-message-scroll > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chat-message-scroll pre {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.chat-markdown pre,
+.chat-markdown code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.chat-markdown pre {
+  white-space: pre-wrap;
+}
+
+.chat-markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.chat-markdown ol ol {
+  list-style-type: lower-alpha;
+}
+
+.chat-markdown li > p {
+  display: inline;
+  margin: 0;
+}
+
+.chat-markdown table {
+  width: 100%;
+  margin: 8px 0;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.chat-markdown th,
+.chat-markdown td {
+  border: 1px solid rgba(240, 246, 252, 0.12);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.chat-markdown th {
+  background: rgba(240, 246, 252, 0.04);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────── */
+.skeleton {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-primary) 25%,
+    var(--border-muted) 50%,
+    var(--bg-primary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Active bottom nav indicator ─────────────────────────────────── */
+.tab-active-indicator {
+  position: relative;
+}
+.tab-active-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: var(--accent-blue);
+  border-radius: 0 0 2px 2px;
+}

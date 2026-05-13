@@ -1,0 +1,25 @@
+#!/command/with-contenv sh
+exec 2>&1
+export HOME=/home/user
+export PATH="/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+unset MISE_DATA_DIR MISE_CONFIG_DIR
+
+DEV_DIR="${SWARMFLEET_FRONTEND_DIR:-/opt/swarmfleet/harness/frontend}"
+if [ ! -d "$DEV_DIR" ]; then
+  echo "[vite] Frontend dev dir not found: $DEV_DIR"
+  exec sleep infinity
+fi
+
+cd "$DEV_DIR"
+mkdir -p "$DEV_DIR/node_modules"
+if ! s6-setuidgid user test -w "$DEV_DIR/node_modules"; then
+  chown -R user:user "$DEV_DIR/node_modules"
+fi
+
+if [ ! -f "$DEV_DIR/node_modules/.package-lock.json" ] || \
+   ! diff -q "$DEV_DIR/package-lock.json" "$DEV_DIR/node_modules/.package-lock.json" >/dev/null 2>&1; then
+  echo "[vite] Installing frontend deps (Linux-native)..."
+  s6-setuidgid user npm install 2>&1
+fi
+
+exec s6-setuidgid user npx vite --host 0.0.0.0 --port 7070 --strictPort

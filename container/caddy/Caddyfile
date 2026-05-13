@@ -1,0 +1,65 @@
+{
+	auto_https off
+	admin off
+}
+
+(common) {
+	@internal path /internal/*
+	respond @internal 404
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:7080 {
+			header_up Host {http.request.host}
+		}
+	}
+
+	handle /auth/* {
+		reverse_proxy 127.0.0.1:7080 {
+			header_up Host {http.request.host}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:{$SWARMFLEET_FRONTEND_PORT:7080} {
+			header_up Host {http.request.host}
+		}
+	}
+
+	handle_errors {
+		@api_or_auth path /api/* /auth/*
+		respond @api_or_auth `{"error":"backend_unavailable","message":"SwarmFleet backend is starting or restarting. Please retry in a few seconds."}` 503 {
+			close
+		}
+
+		root * /etc/caddy
+		rewrite * /startup.html
+		file_server
+	}
+
+	encode zstd gzip
+	log {
+		output stdout
+		format console
+		level WARN
+	}
+}
+
+# localhost - mkcert-signed, for zero-setup local access
+localhost:{$SWARMFLEET_CADDY_HTTPS_PORT:7443} {
+	tls /config/certs/cert.pem /config/certs/key.pem
+	import common
+}
+
+# Tailscale machine name - tailscale-signed (Let's Encrypt), for off-LAN access
+{$SWARMFLEET_TAILSCALE_HOST:disabled.tailscale.localhost}:{$SWARMFLEET_CADDY_HTTPS_PORT:7443} {
+	tls /config/certs/tailscale/cert.pem /config/certs/tailscale/key.pem
+	import common
+}
+
+# Fallback HTTPS listener for direct LAN IPs and ad-hoc local hostnames.
+# The certificate will not match most names; browsers can still proceed
+# after the certificate warning for development access.
+:{$SWARMFLEET_CADDY_HTTPS_PORT:7443} {
+	tls /config/certs/cert.pem /config/certs/key.pem
+	import common
+}

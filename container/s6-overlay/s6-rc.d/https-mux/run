@@ -1,0 +1,5 @@
+#!/command/with-contenv sh
+exec 2>&1
+export PATH="/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+unset MISE_DATA_DIR MISE_CONFIG_DIR
+exec node /usr/local/bin/http-https-mux.cjs

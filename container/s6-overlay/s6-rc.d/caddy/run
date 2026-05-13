@@ -1,0 +1,6 @@
+#!/command/with-contenv sh
+exec 2>&1
+if [ -z "${SWARMFLEET_TAILSCALE_HOST:-}" ]; then
+  export SWARMFLEET_TAILSCALE_HOST=disabled.tailscale.localhost
+fi
+exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

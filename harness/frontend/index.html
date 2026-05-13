@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1117" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="SwarmFleet" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>SwarmFleet</title>
+    <script>
+      // Prevent flash of unstyled content by setting theme class early
+      (function () {
+        let theme = null;
+        try {
+          const unifiedSettings = localStorage.getItem("swarmfleet-webui-settings");
+          if (unifiedSettings) {
+            const parsedSettings = JSON.parse(unifiedSettings);
+            theme =
+              parsedSettings && typeof parsedSettings.theme === "string"
+                ? parsedSettings.theme
+                : null;
+          }
+
+          if (!theme) {
+            const storedTheme = localStorage.getItem("swarmfleet-webui-theme");
+            theme = storedTheme ? JSON.parse(storedTheme) : null;
+          }
+        } catch {
+          theme = null;
+        }
+
+        if (
+          theme === "dark" ||
+          (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

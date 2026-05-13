@@ -1,0 +1,42 @@
+{
+  "name": "swarmfleet-harness",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "SwarmFleet Web UI backend for project automation",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "predev": "node scripts/generate-version.js",
+    "dev": "tsx scripts/dev-supervisor.ts -- cli/node.ts --debug",
+    "prebuild": "node scripts/generate-version.js",
+    "build": "npm run typecheck",
+    "start": "tsx cli/node.ts",
+    "test": "vitest --run --reporter=verbose",
+    "lint": "eslint \"**/*.ts\" --ignore-pattern dist/",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --check \"**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.0.0",
+    "@logtape/logtape": "^1.0.0",
+    "@logtape/pretty": "^1.0.0",
+    "@mariozechner/pi-agent-core": "^0.68.0",
+    "@mariozechner/pi-ai": "^0.68.0",
+    "@simplewebauthn/server": "^11.0.0",
+    "commander": "^14.0.0",
+    "hono": "^4.8.5",
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+.buildx-cache/
+.buildx-cache.next/
+dist/
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.*
+
+# Runtime data
+data/
+workspace/
+/workspace-*/
+/manager/envs.json
+/manager/settings.json
+/manager/data/
+runs/
+test-projects/
+test-results/
+.swarmfleet/
+.terminal-history/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+/manager/.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local dev notes
+local/
+
+# Logs
+*.log
+.swarm/
+.swarm/head.lock
+.swarm/journal.jsonl
+.codex-output.md
+
+.claude/

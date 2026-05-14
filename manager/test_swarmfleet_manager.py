@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -184,6 +185,107 @@ class ManagerBuildStatusTests(unittest.TestCase):
         script = calls[0][0][2]
         self.assertIn("tail -f", script)
         self.assertIn("manager.log", script)
+
+
+class ManagerWorkspaceChangeTests(unittest.TestCase):
+    def app_without_constructor(self, manager):
+        app = object.__new__(manager.App)
+        app.workspace_prompt_pending = True
+        app.refresh_calls = []
+        app.bg_calls = []
+        app.refresh = lambda sender: app.refresh_calls.append(sender)
+        app.bg = lambda *args: app.bg_calls.append(args)
+        return app
+
+    def test_stopped_default_workspace_change_saves_path_without_starting(self):
+        manager = load_manager_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Path(tmp) / "settings.json"
+            chosen = Path(tmp) / "projects"
+            app = self.app_without_constructor(manager)
+
+            with mock.patch.object(manager, "SETTINGS", settings), \
+                 mock.patch.object(manager, "workspace_root", return_value=str(Path(tmp) / "old")), \
+                 mock.patch.object(manager, "choose_workspace_root", return_value=chosen), \
+                 mock.patch.object(manager, "is_running", return_value=False):
+                manager.App.change_workspace(app, None)
+
+            self.assertEqual(app.bg_calls, [])
+            self.assertEqual(app.refresh_calls, [None])
+            saved = json.loads(settings.read_text())
+            self.assertEqual(saved["workspaceRoot"], str(chosen))
+            self.assertEqual(saved["defaultStartedForWorkspaceRoot"], str(chosen))
+
+    def test_running_default_workspace_change_restarts(self):
+        manager = load_manager_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Path(tmp) / "settings.json"
+            chosen = Path(tmp) / "projects"
+            app = self.app_without_constructor(manager)
+
+            with mock.patch.object(manager, "SETTINGS", settings), \
+                 mock.patch.object(manager, "workspace_root", return_value=str(Path(tmp) / "old")), \
+                 mock.patch.object(manager, "choose_workspace_root", return_value=chosen), \
+                 mock.patch.object(manager, "is_running", return_value=True):
+                manager.App.change_workspace(app, None)
+
+            self.assertEqual(len(app.bg_calls), 1)
+            self.assertEqual(app.bg_calls[0][0], "default")
+            self.assertEqual(app.bg_calls[0][1], "restarting")
+            self.assertEqual(app.bg_calls[0][3], "Restart failed")
+            saved = json.loads(settings.read_text())
+            self.assertEqual(saved["workspaceRoot"], str(chosen))
+            self.assertNotIn("defaultStartedForWorkspaceRoot", saved)
+
+    def test_stopped_env_workspace_change_saves_path_without_starting(self):
+        manager = load_manager_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = Path(tmp) / "envs.json"
+            env = {
+                "id": "abc123",
+                "name": "env-2",
+                "container": "swarmfleet-abc123",
+                "workspace": str(Path(tmp) / "old"),
+            }
+            registry.write_text(json.dumps({"next_index": 2, "next_env_ordinal": 3, "envs": [env]}, indent=2) + "\n")
+            chosen = Path(tmp) / "projects"
+            app = self.app_without_constructor(manager)
+
+            with mock.patch.object(manager, "REGISTRY", registry), \
+                 mock.patch.object(manager, "choose_env_projects_dir", return_value=chosen), \
+                 mock.patch.object(manager, "is_running", return_value=False):
+                manager.App.change_env_workspace(app, dict(env))
+
+            self.assertEqual(app.bg_calls, [])
+            self.assertEqual(app.refresh_calls, [None])
+            saved = json.loads(registry.read_text())
+            self.assertEqual(saved["envs"][0]["workspace"], str(chosen))
+
+    def test_running_env_workspace_change_restarts(self):
+        manager = load_manager_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = Path(tmp) / "envs.json"
+            env = {
+                "id": "abc123",
+                "name": "env-2",
+                "container": "swarmfleet-abc123",
+                "workspace": str(Path(tmp) / "old"),
+            }
+            registry.write_text(json.dumps({"next_index": 2, "next_env_ordinal": 3, "envs": [env]}, indent=2) + "\n")
+            chosen = Path(tmp) / "projects"
+            app = self.app_without_constructor(manager)
+
+            with mock.patch.object(manager, "REGISTRY", registry), \
+                 mock.patch.object(manager, "choose_env_projects_dir", return_value=chosen), \
+                 mock.patch.object(manager, "is_running", return_value=True):
+                manager.App.change_env_workspace(app, dict(env))
+
+            self.assertEqual(len(app.bg_calls), 1)
+            self.assertEqual(app.bg_calls[0][0], "abc123")
+            self.assertEqual(app.bg_calls[0][1], "restarting")
+            self.assertEqual(app.bg_calls[0][3], "Restart failed")
+            saved = json.loads(registry.read_text())
+            self.assertEqual(saved["envs"][0]["workspace"], str(chosen))
 
 
 if __name__ == "__main__":

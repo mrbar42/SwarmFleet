@@ -953,20 +953,23 @@ class App(rumps.App):
     def change_workspace(self, _):
         self.workspace_prompt_pending = False
         chosen = choose_workspace_root(workspace_root())
+        running = is_running(default_env()["container"])
         data = load_settings()
         data["workspaceRoot"] = str(chosen)
+        if not running:
+            data["defaultStartedForWorkspaceRoot"] = str(chosen)
         save_settings(data)
         log(f"workspaceRoot saved {chosen}")
         self.refresh(None)
-        env = default_env()
-        label = "restarting" if is_running(env["container"]) else "starting"
-        self.bg("default", label, start_default_for_workspace, "Start failed")
+        if running:
+            self.bg("default", "restarting", start_default_for_workspace, "Restart failed")
 
     def change_env_workspace(self, env):
         if env.get("default") or env.get("external"):
             self.refresh(None)
             return
         chosen = choose_env_projects_dir(env)
+        running = is_running(env["container"])
         db = load()
         updated = None
         for x in db["envs"]:
@@ -980,8 +983,8 @@ class App(rumps.App):
         save(db)
         log(f"env workspace saved env={env.get('name')} id={env.get('id')} workspace={chosen}")
         self.refresh(None)
-        label = "restarting" if is_running(updated["container"]) else "starting"
-        self.bg(env_key(updated), label, lambda e=updated: start_env(e), "Start failed")
+        if running:
+            self.bg(env_key(updated), "restarting", lambda e=updated: start_env(e), "Restart failed")
 
     def set_icon_color(self, mode):
         data = load_settings()

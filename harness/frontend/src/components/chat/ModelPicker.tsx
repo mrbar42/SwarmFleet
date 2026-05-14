@@ -117,10 +117,11 @@ export function getModelLabel(modelId: string): string {
 
 export function getCurrentModelDisplay(modelId: string): string {
   const label = getModelLabel(modelId);
-  if (modelId.startsWith("codex:")) {
+  const provider = deriveProviderFromModel(modelId);
+  if (label.toLowerCase().startsWith(`${provider}:`.toLowerCase())) {
     return label;
   }
-  return `${deriveProviderFromModel(modelId)}:${label}`;
+  return `${provider}:${label}`;
 }
 
 export function isClaudeModel(modelId: string): boolean {

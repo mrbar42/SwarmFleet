@@ -46,13 +46,16 @@ ops = {}
 op_errors = []
 ops_lock = threading.Lock()
 refresh_requested = False
+refresh_until = 0.0
 refresh_lock = threading.Lock()
 
 
-def request_refresh():
-    global refresh_requested
+def request_refresh(grace_seconds=0.0):
+    global refresh_requested, refresh_until
     with refresh_lock:
         refresh_requested = True
+        if grace_seconds > 0:
+            refresh_until = max(refresh_until, time.monotonic() + grace_seconds)
 
 
 def take_refresh_request():
@@ -63,11 +66,22 @@ def take_refresh_request():
         return requested
 
 
+def refresh_grace_active():
+    with refresh_lock:
+        return refresh_until > time.monotonic()
+
+
 def activity_active():
     if build["running"]:
         return True
     with ops_lock:
-        return bool(ops)
+        if ops:
+            return True
+    return refresh_grace_active()
+
+
+def request_final_refresh():
+    request_refresh(grace_seconds=3.0)
 
 
 def op_start(key, label):
@@ -79,7 +93,7 @@ def op_start(key, label):
 def op_end(key):
     with ops_lock:
         ops.pop(key, None)
-    request_refresh()
+    request_final_refresh()
 
 
 def op_error(msg):
@@ -278,6 +292,10 @@ return POSIX path of chosenFolder
             chosen = Path(r.stdout.strip()).expanduser()
             log(f"projects dir chooser osascript selected={chosen}")
             return chosen
+        cancel_output = f"{r.stdout or ''}\n{r.stderr or ''}".lower()
+        if "user canceled" in cancel_output or "(-128)" in cancel_output:
+            log("projects dir chooser osascript cancelled")
+            return None
         log(f"projects dir chooser osascript failed rc={r.returncode} stderr={(r.stderr or '').strip()[:500]}")
 
     if NSOpenPanel is not None and NSURL is not None:
@@ -300,7 +318,7 @@ return POSIX path of chosenFolder
                 log(f"projects dir chooser nsopenpanel selected={chosen}")
                 return chosen
         log("projects dir chooser nsopenpanel cancelled")
-        return default_path
+        return None
 
     log("projects dir chooser rumps window begin")
     w = rumps.Window(
@@ -308,7 +326,10 @@ return POSIX path of chosenFolder
         title=title,
         default_text=str(default_path),
     ).run()
-    chosen = Path(w.text.strip()).expanduser() if w.clicked and w.text.strip() else default_path
+    if not w.clicked or not w.text.strip():
+        log("projects dir chooser rumps cancelled")
+        return None
+    chosen = Path(w.text.strip()).expanduser()
     log(f"projects dir chooser rumps selected={chosen}")
     return chosen
 
@@ -334,7 +355,11 @@ def ensure_workspace_setting():
         return
     if data.get("workspaceRoot"):
         return
-    data["workspaceRoot"] = str(choose_workspace_root(DEFAULT_WORKSPACE_ROOT))
+    chosen = choose_workspace_root(DEFAULT_WORKSPACE_ROOT)
+    if not chosen:
+        log("workspaceRoot setup cancelled")
+        return
+    data["workspaceRoot"] = str(chosen)
     save_settings(data)
 
 
@@ -790,6 +815,8 @@ def build_worker():
         build.update(running=False, pct=100 if rc == 0 else None, error=None if rc == 0 else f"docker build exited {rc}")
     except Exception as e:
         build.update(running=False, pct=None, error=str(e))
+    finally:
+        request_final_refresh()
 
 
 def start_build(wait=False):
@@ -953,6 +980,10 @@ class App(rumps.App):
     def change_workspace(self, _):
         self.workspace_prompt_pending = False
         chosen = choose_workspace_root(workspace_root())
+        if not chosen:
+            log("workspaceRoot change cancelled")
+            self.refresh(None)
+            return
         running = is_running(default_env()["container"])
         data = load_settings()
         data["workspaceRoot"] = str(chosen)
@@ -969,6 +1000,10 @@ class App(rumps.App):
             self.refresh(None)
             return
         chosen = choose_env_projects_dir(env)
+        if not chosen:
+            log(f"env workspace change cancelled env={env.get('name')} id={env.get('id')}")
+            self.refresh(None)
+            return
         running = is_running(env["container"])
         db = load()
         updated = None

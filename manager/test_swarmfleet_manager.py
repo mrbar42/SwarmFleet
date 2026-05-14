@@ -167,6 +167,18 @@ class ManagerBuildStatusTests(unittest.TestCase):
         manager.refresh_running_app("idle")
         self.assertEqual(refreshes, ["requested"])
 
+    def test_operation_end_keeps_refresh_active_temporarily(self):
+        manager = load_manager_module()
+
+        with mock.patch.object(manager.time, "monotonic", return_value=100.0):
+            manager.op_start("default", "starting")
+            manager.op_end("default")
+            self.assertIsNone(manager.op_label("default"))
+            self.assertIs(manager.activity_active(), True)
+
+        with mock.patch.object(manager.time, "monotonic", return_value=104.0):
+            self.assertIs(manager.activity_active(), False)
+
     def test_open_manager_logs_tails_manager_log_with_follow_flag(self):
         manager = load_manager_module()
         calls = []
@@ -185,6 +197,26 @@ class ManagerBuildStatusTests(unittest.TestCase):
         script = calls[0][0][2]
         self.assertIn("tail -f", script)
         self.assertIn("manager.log", script)
+
+    def test_osascript_folder_cancel_does_not_fall_back_to_native_panel(self):
+        manager = load_manager_module()
+        panel = types.SimpleNamespace(openPanel=mock.Mock(side_effect=AssertionError("unexpected fallback")))
+        cancelled = subprocess.CompletedProcess(
+            ["osascript"],
+            1,
+            "",
+            "72:170: execution error: User canceled. (-128)",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(manager.shutil, "which", return_value="/usr/bin/osascript"), \
+             mock.patch.object(manager.subprocess, "run", return_value=cancelled), \
+             mock.patch.object(manager, "NSOpenPanel", panel), \
+             mock.patch.object(manager, "NSURL", object()):
+            chosen = manager.choose_projects_dir(Path(tmp))
+
+        self.assertIsNone(chosen)
+        panel.openPanel.assert_not_called()
 
 
 class ManagerWorkspaceChangeTests(unittest.TestCase):
@@ -237,6 +269,22 @@ class ManagerWorkspaceChangeTests(unittest.TestCase):
             self.assertEqual(saved["workspaceRoot"], str(chosen))
             self.assertNotIn("defaultStartedForWorkspaceRoot", saved)
 
+    def test_cancelled_default_workspace_change_is_noop(self):
+        manager = load_manager_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Path(tmp) / "settings.json"
+            app = self.app_without_constructor(manager)
+
+            with mock.patch.object(manager, "SETTINGS", settings), \
+                 mock.patch.object(manager, "choose_workspace_root", return_value=None), \
+                 mock.patch.object(manager, "is_running") as is_running:
+                manager.App.change_workspace(app, None)
+
+            is_running.assert_not_called()
+            self.assertEqual(app.bg_calls, [])
+            self.assertEqual(app.refresh_calls, [None])
+            self.assertFalse(settings.exists())
+
     def test_stopped_env_workspace_change_saves_path_without_starting(self):
         manager = load_manager_module()
         with tempfile.TemporaryDirectory() as tmp:
@@ -286,6 +334,24 @@ class ManagerWorkspaceChangeTests(unittest.TestCase):
             self.assertEqual(app.bg_calls[0][3], "Restart failed")
             saved = json.loads(registry.read_text())
             self.assertEqual(saved["envs"][0]["workspace"], str(chosen))
+
+    def test_cancelled_env_workspace_change_is_noop(self):
+        manager = load_manager_module()
+        env = {
+            "id": "abc123",
+            "name": "env-2",
+            "container": "swarmfleet-abc123",
+            "workspace": "/tmp/old",
+        }
+        app = self.app_without_constructor(manager)
+
+        with mock.patch.object(manager, "choose_env_projects_dir", return_value=None), \
+             mock.patch.object(manager, "is_running") as is_running:
+            manager.App.change_env_workspace(app, dict(env))
+
+        is_running.assert_not_called()
+        self.assertEqual(app.bg_calls, [])
+        self.assertEqual(app.refresh_calls, [None])
 
 
 if __name__ == "__main__":

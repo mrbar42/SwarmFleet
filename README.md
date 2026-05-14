@@ -8,20 +8,27 @@
 
 (README written entirely by a human) 
 
-This is an AI agent harness that you can manipulate on-the-go thanks to hot-reloaded frontend and smart auto-restart of the backend and other components.
+SwarmFleet is an AI agent harness inside a container that you can manipulate on-the-go thanks to hot-reloaded frontend and smart auto-restart of the backend and other components.
 
 Kanban? Multi-agent orchestration? Team of cross-communicating agents? just start a new session and ask for it. SwarmFleet is the starting point for your wildest ideas.
 
 **this is an alpha preview of the idea**  
-it's 100% AI slop, unrefined and unreviewed.  
+it's far from production grade "ready".
 the one thing i can say is that i personally use it all day everyday.
 
 ## How to use
+requirements:
+- Docker
+- Python >= 3.9
+
 ```
 git clone https://github.com/mrbar42/SwarmFleet.git
 cd SwarmFleet
 ./swarmfleet.sh # launches the tray icon
 ```
+
+<img src="media/manager.jpg" width="500" alt="Manager menu">
+
 You should see SwarmFleet tray icon, then:
 - choose projects dir to be mounted into docker
 - build the image (yes, yes, this will take a while... you can use `./build-docker.sh` for more visibility)
@@ -74,7 +81,7 @@ see [Advanced Usage](#advanced-usage) for additional info
 
 ```bash
 git pull
-./swarmfleet.sh
+./swarmfleet.sh # this will restart the manager
 ```
 
 ## Advanced Usage

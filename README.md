@@ -10,11 +10,13 @@
 
 SwarmFleet is an AI agent harness inside a container that you can manipulate on-the-go thanks to hot-reloaded frontend and smart auto-restart of the backend and other components.
 
-Kanban? Multi-agent orchestration? Team of cross-communicating agents? just start a new session and ask for it. SwarmFleet is the starting point for your wildest ideas.
+Kanban? Multi-agent orchestration? a snake game while you wait? just start a new session and ask for it. SwarmFleet is the starting point for your wildest ideas.
 
 **this is an alpha preview of the idea**  
 it's far from production grade "ready".
 the one thing i can say is that i personally use it all day everyday.
+
+[Blog Post](https://mrbar42.com/post/swarmfleet)
 
 ## How to use
 requirements:
@@ -107,7 +109,6 @@ would you rather the thing you're working on will be right there next to agent t
 
 - [CoderLuii/HolyClaude](https://github.com/CoderLuii/HolyClaude) - for inspiring the container
 - [sugyan/claude-code-webui](https://github.com/sugyan/claude-code-webui) - for seeding the webui
-
 
 
 ---

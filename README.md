@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/full-logo-horizontal.png" width="400" alt="SwarmFleet logo">
+  <img src="media/logo.png" height="150" alt="SwarmFleet logo">
 </p>
 
 # SwarmFleet

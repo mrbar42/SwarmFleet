@@ -70,6 +70,13 @@ see [Advanced Usage](#advanced-usage) for additional info
 - per project display service (runs dev server)
 - telegram notifications
 
+## How to update
+
+```bash
+git pull
+./swarmfleet.sh
+```
+
 ## Advanced Usage
 
 Runtime state is stored under `~/.local/swarmfleet/` by default. Manager/global files live directly in that directory, and each environment keeps its own state under a stable directory such as `env-default/` or `env-2/`.
@@ -80,6 +87,14 @@ SWARMFLEET_STATE_DIR=~/.local/swarmfleet2 SWARMFLEET_HOST_PORT=8070 ./run-docker
 ```
 
 The source code mounted into the container always comes from the repository containing `run-docker-instance.sh`.
+
+## Future outlook
+
+SwarmFleet can evolve to become AI interface operating system with everything is fluid and changable on the spot, ever improving.
+the missing piece is to compartmentalize the tools so it doesn't become a mega system that clutters the context of each agent.
+we need to have a concept of "apps" or something like that that extends SwarmFleet while being activated on demand and hot-reloaded like the rest of the interface.
+Once this extensibility concept is introduced it would be easier to add BIG features to SwarmFleet, like a video editor, designated workflow UI, game and so on.
+would you rather the thing you're working on will be right there next to agent that does the work? all common AI apps work like this, but with SwarmFleet you can do it for EVERYTHING you can imagine.
 
 ## Honorable Mentions
 

@@ -43,6 +43,12 @@ You should see SwarmFleet tray icon, then:
 
 see [Advanced Usage](#advanced-usage) for additional info
 
+## UI Screenshot
+
+| Desktop | Mobile |
+| --- | --- |
+| <img src="media/ui-web.jpg" alt="SwarmFleet desktop UI screenshot" width="720"> | <img src="media/ui-mobile.png" alt="SwarmFleet mobile UI screenshot" width="320"> |
+
 ## Main components
 - container - a docker image with tools needed for dev env + headless chromium and service init scripts
 - "manager" - a simple tray icon util
